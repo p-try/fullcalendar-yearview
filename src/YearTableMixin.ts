@@ -1,5 +1,5 @@
-import {DayTableMixin} from 'fullcalendar'
 import { Moment } from 'moment'
+import DayTableMixin from "./DayTableMixin";
 
 export default class YearTableMixin extends DayTableMixin {
 

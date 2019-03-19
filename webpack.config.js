@@ -45,7 +45,5 @@ module.exports = {
         library: 'FullCalendar', // gulp will strip this out for plugins
         libraryTarget: 'umd',
         filename: '[name].js'
-    },
-    watch: true
-
+    }
 };

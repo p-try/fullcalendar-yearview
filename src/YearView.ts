@@ -3,7 +3,7 @@
 
 import {BasicView} from "fullcalendar";
 import YearGrid from "./YearGrid";
-import YearViewDateProfileGenerator from "./YearViewDateProfileGenerator";
+import {YearViewDateProfileGenerator} from "./YearViewDateProfileGenerator";
 
 export default class YearView extends BasicView {
 

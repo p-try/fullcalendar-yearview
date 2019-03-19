@@ -1,6 +1,7 @@
-import {BasicViewDateProfileGenerator, UnzonedRange} from "fullcalendar";
+import {UnzonedRange} from "fullcalendar";
+import DateProfileGenerator from "./DateProfileGenerator";
 
-export default class YearViewDateProfileGenerator extends BasicViewDateProfileGenerator {
+class YearViewDateProfileGenerator extends DateProfileGenerator {
 
   // Computes the date range that will be rendered.
   buildRenderRange(currentUnzonedRange, currentRangeUnit, isRangeAllDay) {
@@ -9,4 +10,8 @@ export default class YearViewDateProfileGenerator extends BasicViewDateProfileGe
     return new UnzonedRange(start, end)
   }
 
+}
+
+export {
+    YearViewDateProfileGenerator
 }
