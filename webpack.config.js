@@ -44,6 +44,7 @@ module.exports = {
     output: {
         library: 'FullCalendar', // gulp will strip this out for plugins
         libraryTarget: 'umd',
+        path: __dirname + "/dist",
         filename: '[name].js'
     }
 };
