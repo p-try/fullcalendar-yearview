@@ -32,15 +32,11 @@ export default class YearView extends BasicView {
       renderHeadIntroHtml() {
         let view = this.view
 
-        if (this.colWeekNumbersVisible) {
           return '' +
             '<th class="fc-week-number ' + view.calendar.theme.getClass('widgetHeader') + '" ' + view.weekNumberStyleAttr() + '>' +
             '<span>' +
             '</span>' +
             '</th>'
-        }
-
-        return ''
       }
 
 
@@ -64,12 +60,9 @@ export default class YearView extends BasicView {
       renderBgIntroHtml() {
         let view = this.view
 
-        if (this.colWeekNumbersVisible) {
-          return '<td class="fc-week-number ' + view.calendar.theme.getClass('widgetContent') + '" ' +
+        return '<td class="fc-week-number ' + view.calendar.theme.getClass('widgetContent') + '" ' +
             view.weekNumberStyleAttr() + '></td>'
-        }
 
-        return ''
       }
 
 
@@ -78,16 +71,13 @@ export default class YearView extends BasicView {
       renderIntroHtml() {
         let view = this.view
 
-        if (this.colWeekNumbersVisible) {
-          return '<td class="fc-week-number" ' + view.weekNumberStyleAttr() + '></td>'
-        }
+        return '<td class="fc-week-number" ' + view.weekNumberStyleAttr() + '></td>'
 
-        return ''
       }
 
 
       getIsNumbersVisible() {
-        return YearGrid.prototype.getIsNumbersVisible.apply(this, arguments) || this.colWeekNumbersVisible
+        return true
       }
 
     }
