@@ -49,17 +49,14 @@ export default class YearView extends BasicView {
         let view = this.view
         let monthStart = this.getCellDate(row, 0)
 
-        if (this.colWeekNumbersVisible) {
-          return '' +
-            '<td class="fc-week-number" ' + view.weekNumberStyleAttr() + '>' +
-            view.buildGotoAnchorHtml( // aside from link, important for matchCellWidths
-              { date: monthStart, type: 'week', forceOff: this.colCnt === 1 },
-              monthStart.format('MMM') // inner HTML
-            ) +
-            '</td>'
-        }
+        return '' +
+          '<td class="fc-week-number" ' + view.weekNumberStyleAttr() + '>' +
+          view.buildGotoAnchorHtml( // aside from link, important for matchCellWidths
+            { date: monthStart, type: 'week', forceOff: this.colCnt === 1 },
+            monthStart.format('MMM') // inner HTML
+          ) +
+          '</td>'
 
-        return ''
       }
 
 
