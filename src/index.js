@@ -1,7 +1,7 @@
-if ($.fullCalendar !== undefined) {
+if (jQuery.fullCalendar !== undefined) {
     var YearView = require('./YearView').default;
 
-    $.fullCalendar.defineView('year', {
+    jQuery.fullCalendar.defineView('year', {
         'class': YearView,
         duration: { years: 1 }
     });
