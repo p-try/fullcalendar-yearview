@@ -1,17 +1,26 @@
 {
   "private": true,
-  "name": "@fullcalendar/year",
+  "name": "fullcalendar-yearview",
   "version": "4.3.0",
   "title": "FullCalendar Year View Plugin",
   "description": "Display events a full year view",
   "docs": "TODO",
   "browserGlobal": "FullCalendarYearView",
-  "peerDependencies": {
-    "@fullcalendar/core": "~4.3.0",
+  "dependencies": {
     "moment": "^2.24.0"
   },
   "devDependencies": {
-    "@fullcalendar/core": "~4.3.0",
-    "moment": "^2.24.0"
+    "moment": "^2.24.0",
+    "sass-loader": "^8.0.2",
+    "ts-loader": "^6.2.1",
+    "tsconfig-paths-webpack-plugin": "^3.2.0",
+    "tslib": "^1.10.0",
+    "typescript": "^3.7.5",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10"
+  },
+  "scripts": {
+    "build": "webpack",
+    "watch": "webpack --watch"
   }
 }
