@@ -1,21 +1,17 @@
 {
-  "name": "fullcalendar-yearview",
-  "version": "1.0.0",
-  "dependencies": {
-
+  "private": true,
+  "name": "@fullcalendar/year",
+  "version": "4.3.0",
+  "title": "FullCalendar Year View Plugin",
+  "description": "Display events a full year view",
+  "docs": "TODO",
+  "browserGlobal": "FullCalendarYearView",
+  "peerDependencies": {
+    "@fullcalendar/core": "~4.3.0",
+    "moment": "^2.24.0"
   },
   "devDependencies": {
-    "fullcalendar": "^3.10.0",
-    "jquery": "2 - 3",
-    "moment": "^2.24.0",
-    "@types/jquery": "2.0.47",
-    "awesome-typescript-loader": "^3.5.0",
-    "typescript": "^2.7.2",
-    "webpack": "^3.11.0",
-    "webpack-cli": "^3.3.0"
-  },
-  "scripts": {
-    "webpack": "webpack",
-    "watch": "webpack --watch"
+    "@fullcalendar/core": "~4.3.0",
+    "moment": "^2.24.0"
   }
 }
