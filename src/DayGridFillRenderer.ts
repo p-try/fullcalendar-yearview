@@ -3,27 +3,26 @@ import {
   appendToElement,
   prependToElement,
   FillRenderer,
-  Seg,
-  ComponentContext
+  Seg
 } from '@fullcalendar/core'
-import YearGrid, { DayGridSeg } from './YearGrid'
+import DayGrid, { DayGridSeg } from './DayGrid'
 
 
 const EMPTY_CELL_HTML = '<td style="pointer-events:none"></td>'
 
 
-export default class YearGridFillRenderer extends FillRenderer {
+export default class DayGridFillRenderer extends FillRenderer {
 
   fillSegTag: string = 'td' // override the default tag name
-  dayGrid: YearGrid
+  dayGrid: DayGrid
 
-  constructor(dayGrid: YearGrid) {
-    super()
+  constructor(dayGrid: DayGrid) {
+    super(dayGrid.context)
 
     this.dayGrid = dayGrid
   }
 
-  renderSegs(type: string, context: ComponentContext, segs: DayGridSeg[]) {
+  renderSegs(type: string, segs: DayGridSeg[]) {
 
     // don't render timed background events
     if (type === 'bgEvent') {
@@ -32,7 +31,7 @@ export default class YearGridFillRenderer extends FillRenderer {
       })
     }
 
-    super.renderSegs(type, context, segs)
+    super.renderSegs(type, segs)
   }
 
   attachSegs(type, segs: Seg[]) {
@@ -54,8 +53,7 @@ export default class YearGridFillRenderer extends FillRenderer {
   // Generates the HTML needed for one row of a fill. Requires the seg's el to be rendered.
   renderFillRow(type, seg: Seg): HTMLElement {
     let { dayGrid } = this
-    let { isRtl } = this.context
-    let { colCnt } = dayGrid
+    let { colCnt, isRtl } = dayGrid
     let leftCol = isRtl ? (colCnt - 1 - seg.lastCol) : seg.firstCol
     let rightCol = isRtl ? (colCnt - 1 - seg.firstCol) : seg.lastCol
     let startCol = leftCol
@@ -96,7 +94,7 @@ export default class YearGridFillRenderer extends FillRenderer {
 
     let introHtml = dayGrid.renderProps.renderIntroHtml()
     if (introHtml) {
-      if (isRtl) {
+      if (dayGrid.isRtl) {
         appendToElement(trEl, introHtml)
       } else {
         prependToElement(trEl, introHtml)

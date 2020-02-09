@@ -1,5 +1,6 @@
 const path = require('path');
-const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const ReplaceInFileWebpackPlugin = require('replace-in-file-webpack-plugin');
 
 module.exports = {
     entry: './src/main.ts',
@@ -7,28 +8,44 @@ module.exports = {
         rules: [
             {
                 test: /\.tsx?$/,
-                use: 'ts-loader',
-                exclude: /node_modules/
+                loader: 'awesome-typescript-loader'
             },
             {
-                test: /\.s[ac]ss$/i,
+                test: /\.s?css$/,
                 use: [
-                    // Creates `style` nodes from JS strings
-                    'style-loader',
-                    // Translates CSS into CommonJS
-                    'css-loader',
-                    // Compiles Sass to CSS
-                    'sass-loader',
-                ],
-            },
+                    MiniCssExtractPlugin.loader,
+                    "css-loader",
+                    "sass-loader"
+                ]
+            }
         ],
     },
     resolve: {
-        extensions: [ '.tsx', '.ts', '.js' ],
-        plugins: [new TsconfigPathsPlugin({ /*configFile: "./path/to/tsconfig.json" */ })]
+        extensions: ['.tsx', '.ts', '.js'],
     },
+    plugins: [
+        new MiniCssExtractPlugin({
+            filename: "[name].css",
+            chunkFilename: "[id].css"
+        }),
+        new ReplaceInFileWebpackPlugin([{
+            dir: 'dist',
+            files: ['main.js'],
+            rules: [{
+                search: /@fullcalendar\/core/g,
+                replace: 'FullCalendar'
+            }]
+        }])
+    ],
+    optimization: {
+        minimize: false
+    },
+    externals: /(fullcalendar|moment)/i,
     output: {
-        filename: 'bundle.js',
+        library: "FullCalendarYearView",
+        libraryTarget: "umd",
+        globalObject: "this",
+        filename: 'main.js',
         path: path.resolve(__dirname, 'dist'),
-    },
+    }
 };

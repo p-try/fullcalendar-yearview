@@ -19,15 +19,14 @@ import {
   getDayClasses,
   DateProfile,
   memoizeRendering,
-  MemoizedRendering,
-  ComponentContext
+  MemoizedRendering
 } from '@fullcalendar/core'
 import Popover from './Popover'
-import YearEventRenderer from './YearEventRenderer'
-import YearGridMirrorRenderer from './YearGridMirrorRenderer'
-import YearGridFillRenderer from './YearGridFillRenderer'
-import YearTile from './YearTile'
-import YearDayBgRow from './YearDayBgRow'
+import DayGridEventRenderer from './DayGridEventRenderer'
+import DayGridMirrorRenderer from './DayGridMirrorRenderer'
+import DayGridFillRenderer from './DayGridFillRenderer'
+import DayTile from './DayTile'
+import DayBgRow from './DayBgRow'
 import moment from 'moment'
 
 const DAY_NUM_FORMAT = createFormatter({ day: 'numeric' })
@@ -38,7 +37,7 @@ const WEEK_NUM_FORMAT = createFormatter({ week: 'numeric' })
 ----------------------------------------------------------------------------------------------------------------------*/
 
 export interface RenderProps { // TODO: combine with DayGridProps
-  renderNumberIntroHtml: (row: number, dayGrid: YearGrid) => string
+  renderNumberIntroHtml: (row: number, dayGrid: DayGrid) => string
   renderBgIntroHtml: () => string
   renderIntroHtml: () => string
   colWeekNumbersVisible: boolean // week numbers render in own column? (caller does HTML via intro)
@@ -72,9 +71,9 @@ export interface DayGridProps {
   isRigid: boolean
 }
 
-export default class YearGrid extends DateComponent<DayGridProps> {
+export default class DayGrid extends DateComponent<DayGridProps> {
 
-  eventRenderer: YearEventRenderer
+  eventRenderer: DayGridEventRenderer
   renderProps: RenderProps
 
   rowCnt: number
@@ -90,26 +89,24 @@ export default class YearGrid extends DateComponent<DayGridProps> {
   colPositions: PositionCache
 
   segPopover: Popover // the Popover that holds events that can't fit in a cell. null when not visible
-  segPopoverTile: YearTile
+  segPopoverTile: DayTile
 
   private renderCells: MemoizedRendering<[DayGridCell[][], boolean]>
-  private renderBusinessHours: MemoizedRendering<[ComponentContext, DayGridSeg[]]>
-  private renderDateSelection: MemoizedRendering<[ComponentContext, DayGridSeg[]]>
-  private renderBgEvents: MemoizedRendering<[ComponentContext, DayGridSeg[]]>
-  private renderFgEvents: MemoizedRendering<[ComponentContext, DayGridSeg[]]>
+  private renderBusinessHours: MemoizedRendering<[DayGridSeg[]]>
+  private renderDateSelection: MemoizedRendering<[DayGridSeg[]]>
+  private renderBgEvents: MemoizedRendering<[DayGridSeg[]]>
+  private renderFgEvents: MemoizedRendering<[DayGridSeg[]]>
   private renderEventSelection: MemoizedRendering<[string]>
   private renderEventDrag: MemoizedRendering<[EventSegUiInteractionState]>
   private renderEventResize: MemoizedRendering<[EventSegUiInteractionState]>
 
 
-  constructor(el, renderProps: RenderProps) {
-    super(el)
+  constructor(context, el, renderProps: RenderProps) {
+    super(context, el)
 
-    this.renderProps = renderProps
-
-    let eventRenderer = this.eventRenderer = new YearEventRenderer(this)
-    let fillRenderer = this.fillRenderer = new YearGridFillRenderer(this)
-    this.mirrorRenderer = new YearGridMirrorRenderer(this)
+    let eventRenderer = this.eventRenderer = new DayGridEventRenderer(this)
+    let fillRenderer = this.fillRenderer = new DayGridFillRenderer(this)
+    this.mirrorRenderer = new DayGridMirrorRenderer(this)
 
     let renderCells = this.renderCells = memoizeRendering(
       this._renderCells,
@@ -157,19 +154,21 @@ export default class YearGrid extends DateComponent<DayGridProps> {
       this._unrenderEventResize,
       [ renderCells ]
     )
+
+    this.renderProps = renderProps
   }
 
 
-  render(props: DayGridProps, context: ComponentContext) {
+  render(props: DayGridProps) {
     let cells = props.cells
     this.rowCnt = cells.length
     this.colCnt = cells[0].length
 
     this.renderCells(cells, props.isRigid)
-    this.renderBusinessHours(context, props.businessHourSegs)
-    this.renderDateSelection(context, props.dateSelectionSegs)
-    this.renderBgEvents(context, props.bgEventSegs)
-    this.renderFgEvents(context, props.fgEventSegs)
+    this.renderBusinessHours(props.businessHourSegs)
+    this.renderDateSelection(props.dateSelectionSegs)
+    this.renderBgEvents(props.bgEventSegs)
+    this.renderFgEvents(props.fgEventSegs)
     this.renderEventSelection(props.eventSelection)
     this.renderEventDrag(props.eventDrag)
     this.renderEventResize(props.eventResize)
@@ -204,7 +203,7 @@ export default class YearGrid extends DateComponent<DayGridProps> {
       eventSelection: ownProps.eventSelection,
       eventDragInstances: ownProps.eventDrag ? ownProps.eventDrag.affectedInstances : null,
       eventResizeInstances: ownProps.eventResize ? ownProps.eventResize.affectedInstances : null
-    }, this.context)
+    })
   }
 
 
@@ -213,7 +212,7 @@ export default class YearGrid extends DateComponent<DayGridProps> {
 
 
   _renderCells(cells: DayGridCell[][], isRigid: boolean) {
-    let { calendar, view, isRtl, dateEnv } = this.context
+    let { view, dateEnv } = this
     let { rowCnt, colCnt } = this
     let html = ''
     let row
@@ -227,7 +226,7 @@ export default class YearGrid extends DateComponent<DayGridProps> {
     this.rowEls = findElements(this.el, '.fc-row')
     this.cellEls = findElements(this.el, '.fc-day, .fc-disabled-day')
 
-    if (isRtl) {
+    if (this.isRtl) {
       this.cellEls.reverse()
     }
 
@@ -252,7 +251,7 @@ export default class YearGrid extends DateComponent<DayGridProps> {
           break
         }
         if (cells[row][col].date != null) {
-          calendar.publiclyTrigger('dayRender', [
+          this.publiclyTrigger('dayRender', [
             {
               date: dateEnv.toDate(cells[row][col].date),
               el: this.getCellEl(row, col),
@@ -275,19 +274,19 @@ export default class YearGrid extends DateComponent<DayGridProps> {
   // Generates the HTML for a single row, which is a div that wraps a table.
   // `row` is the row number.
   renderDayRowHtml(row, isRigid) {
-    let { theme } = this.context
+    let { theme } = this
     let classes = [ 'fc-row', 'fc-week', theme.getClass('dayRow') ]
 
     if (isRigid) {
       classes.push('fc-rigid')
     }
 
-    let bgRow = new YearDayBgRow(this.context)
+    let bgRow = new DayBgRow(this.context)
 
     return '' +
       '<div class="' + classes.join(' ') + '">' +
-      '<div class="fc-row-monthname fc-content">' + moment(this.props.cells[row][0].date).format('MMM') + '</div>' +
-      '<div class="fc-bg">' +
+        '<div class="fc-row-monthname fc-content"><span>' + moment(this.props.cells[row][0].date).format('MMM') + '</span></div>' +
+        '<div class="fc-bg">' +
           '<table class="' + theme.getClass('tableGrid') + '">' +
             bgRow.renderHtml({
               cells: this.props.cells[row],
@@ -327,14 +326,13 @@ export default class YearGrid extends DateComponent<DayGridProps> {
 
 
   renderNumberTrHtml(row: number) {
-    let { isRtl } = this.context
     let intro = this.renderProps.renderNumberIntroHtml(row, this)
 
     return '' +
       '<tr>' +
-        (isRtl ? '' : intro) +
+        (this.isRtl ? '' : intro) +
         this.renderNumberCellsHtml(row) +
-        (isRtl ? intro : '') +
+        (this.isRtl ? intro : '') +
       '</tr>'
   }
 
@@ -349,7 +347,7 @@ export default class YearGrid extends DateComponent<DayGridProps> {
       htmls.push(this.renderNumberCellHtml(date))
     }
 
-    if (this.context.isRtl) {
+    if (this.isRtl) {
       htmls.reverse()
     }
 
@@ -363,7 +361,7 @@ export default class YearGrid extends DateComponent<DayGridProps> {
     if (date === null) {
       return '<td></td>'
     }
-    let { dateEnv, options } = this.context
+    let { view, dateEnv } = this
     let html = ''
     let isDateValid = rangeContainsMarker(this.props.dateProfile.activeRange, date) // TODO: called too frequently. cache somehow.
     let isDayNumberVisible = this.getIsDayNumbersVisible() && isDateValid
@@ -391,8 +389,7 @@ export default class YearGrid extends DateComponent<DayGridProps> {
 
     if (this.renderProps.cellWeekNumbersVisible && (date.getUTCDay() === weekCalcFirstDow)) {
       html += buildGotoAnchorHtml(
-        options,
-        dateEnv,
+        view,
         { date, type: 'week' },
         { 'class': 'fc-week-number' },
         dateEnv.format(date, WEEK_NUM_FORMAT) // inner HTML
@@ -401,11 +398,10 @@ export default class YearGrid extends DateComponent<DayGridProps> {
 
     if (isDayNumberVisible) {
       html += buildGotoAnchorHtml(
-        options,
-        dateEnv,
-        date,
-        { 'class': 'fc-day-number' },
-        '<span class="fc-day-number-weekday">' + moment(date).format('dd') + '</span>' + dateEnv.format(date, DAY_NUM_FORMAT) // inner HTML
+          view,
+          date,
+          { 'class': 'fc-day-number' },
+          '<span class="fc-day-number-weekday">' + moment(date).format('dd') + '</span>' + dateEnv.format(date, DAY_NUM_FORMAT) // inner HTML
       )
     }
 
@@ -420,13 +416,12 @@ export default class YearGrid extends DateComponent<DayGridProps> {
 
 
   updateSize(isResize: boolean) {
-    let { calendar } = this.context
     let { fillRenderer, eventRenderer, mirrorRenderer } = this
 
     if (
       isResize ||
       this.isCellSizesDirty ||
-      calendar.isEventsUpdated // hack
+      this.view.calendar.isEventsUpdated // hack
     ) {
       this.buildPositionCaches()
       this.isCellSizesDirty = false
@@ -505,7 +500,7 @@ export default class YearGrid extends DateComponent<DayGridProps> {
   _renderEventDrag(state: EventSegUiInteractionState) {
     if (state) {
       this.eventRenderer.hideByHash(state.affectedInstances)
-      this.fillRenderer.renderSegs('highlight', this.context, state.segs)
+      this.fillRenderer.renderSegs('highlight', state.segs)
     }
   }
 
@@ -513,7 +508,7 @@ export default class YearGrid extends DateComponent<DayGridProps> {
   _unrenderEventDrag(state: EventSegUiInteractionState) {
     if (state) {
       this.eventRenderer.showByHash(state.affectedInstances)
-      this.fillRenderer.unrender('highlight', this.context)
+      this.fillRenderer.unrender('highlight')
     }
   }
 
@@ -525,8 +520,8 @@ export default class YearGrid extends DateComponent<DayGridProps> {
   _renderEventResize(state: EventSegUiInteractionState) {
     if (state) {
       this.eventRenderer.hideByHash(state.affectedInstances)
-      this.fillRenderer.renderSegs('highlight', this.context, state.segs)
-      this.mirrorRenderer.renderSegs(this.context, state.segs, { isResizing: true, sourceSeg: state.sourceSeg })
+      this.fillRenderer.renderSegs('highlight', state.segs)
+      this.mirrorRenderer.renderSegs(state.segs, { isResizing: true, sourceSeg: state.sourceSeg })
     }
   }
 
@@ -534,8 +529,8 @@ export default class YearGrid extends DateComponent<DayGridProps> {
   _unrenderEventResize(state: EventSegUiInteractionState) {
     if (state) {
       this.eventRenderer.showByHash(state.affectedInstances)
-      this.fillRenderer.unrender('highlight', this.context)
-      this.mirrorRenderer.unrender(this.context, state.segs, { isResizing: true, sourceSeg: state.sourceSeg })
+      this.fillRenderer.unrender('highlight')
+      this.mirrorRenderer.unrender(state.segs, { isResizing: true, sourceSeg: state.sourceSeg })
     }
   }
 
@@ -604,8 +599,7 @@ export default class YearGrid extends DateComponent<DayGridProps> {
   // `row` is the row number.
   // `levelLimit` is a number for the maximum (inclusive) number of levels allowed.
   limitRow(row, levelLimit) {
-    let { colCnt } = this
-    let { isRtl } = this.context
+    let { colCnt, isRtl } = this
     let rowStruct = this.eventRenderer.rowStructs[row]
     let moreNodes = [] // array of "more" <a> links and <td> DOM nodes
     let col = 0 // col #, left-to-right (not chronologically)
@@ -723,13 +717,13 @@ export default class YearGrid extends DateComponent<DayGridProps> {
   // Renders an <a> element that represents hidden event element for a cell.
   // Responsible for attaching click handler as well.
   renderMoreLink(row, col, hiddenSegs) {
-    let { calendar, view, dateEnv, options, isRtl } = this.context
+    let { view, dateEnv } = this
 
     let a = createElement('a', { className: 'fc-more' })
     a.innerText = this.getMoreLinkText(hiddenSegs.length)
     a.addEventListener('click', (ev) => {
-      let clickOption = options.eventLimitClick
-      let _col = isRtl ? this.colCnt - col - 1 : col // HACK: props.cells has different dir system?
+      let clickOption = this.opt('eventLimitClick')
+      let _col = this.isRtl ? this.colCnt - col - 1 : col // HACK: props.cells has different dir system?
       let date = this.props.cells[row][_col].date
       let moreEl = ev.currentTarget as HTMLElement
       let dayEl = this.getCellEl(row, col)
@@ -741,7 +735,7 @@ export default class YearGrid extends DateComponent<DayGridProps> {
 
       if (typeof clickOption === 'function') {
         // the returned value can be an atomic option
-        clickOption = calendar.publiclyTrigger('eventLimitClick', [
+        clickOption = this.publiclyTrigger('eventLimitClick', [
           {
             date: dateEnv.toDate(date),
             allDay: true,
@@ -758,7 +752,7 @@ export default class YearGrid extends DateComponent<DayGridProps> {
       if (clickOption === 'popover') {
         this.showSegPopover(row, col, moreEl, reslicedAllSegs)
       } else if (typeof clickOption === 'string') { // a view name
-        calendar.zoomTo(date, clickOption)
+        view.calendar.zoomTo(date, clickOption)
       }
     })
 
@@ -768,8 +762,8 @@ export default class YearGrid extends DateComponent<DayGridProps> {
 
   // Reveals the popover that displays all events within a cell
   showSegPopover(row, col, moreLink: HTMLElement, segs) {
-    let { calendar, view, theme, isRtl } = this.context
-    let _col = isRtl ? this.colCnt - col - 1 : col // HACK: props.cells has different dir system?
+    let { calendar, view, theme } = this
+    let _col = this.isRtl ? this.colCnt - col - 1 : col // HACK: props.cells has different dir system?
     let moreWrap = moreLink.parentNode as HTMLElement // the <div> wrapper around the <a>
     let topEl: HTMLElement // the element we want to match the top coordinate of
     let options
@@ -786,7 +780,10 @@ export default class YearGrid extends DateComponent<DayGridProps> {
       top: computeRect(topEl).top,
       autoHide: true, // when the user clicks elsewhere, hide the popover
       content: (el) => {
-        this.segPopoverTile = new YearTile(el)
+        this.segPopoverTile = new DayTile(
+          this.context,
+          el
+        )
         this.updateSegPopoverTile(
           this.props.cells[row][_col].date,
           segs
@@ -802,7 +799,7 @@ export default class YearGrid extends DateComponent<DayGridProps> {
 
     // Determine horizontal coordinate.
     // We use the moreWrap instead of the <td> to avoid border confusion.
-    if (isRtl) {
+    if (this.isRtl) {
       options.right = computeRect(moreWrap).right + 1 // +1 to be over cell border
     } else {
       options.left = computeRect(moreWrap).left - 1 // -1 to be over cell border
@@ -847,7 +844,7 @@ export default class YearGrid extends DateComponent<DayGridProps> {
 
   // Generates the text that should be inside a "more" link, given the number of events it represents
   getMoreLinkText(num) {
-    let opt = this.context.options.eventLimitText
+    let opt = this.opt('eventLimitText')
 
     if (typeof opt === 'function') {
       return opt(num)

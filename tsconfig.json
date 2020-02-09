@@ -8,14 +8,6 @@
       "es2015",
       "scripthost"
     ],
-    "paths": {
-      "@fullcalendar/core": [
-        "fullcalendar/packages/core/src/main"
-      ],
-      "@fullcalendar/core/*": [
-        "fullcalendar/packages/core/src/*"
-      ]
-    },
     "allowSyntheticDefaultImports": true,
     "noUnusedLocals": true,
     "noImplicitUseStrict": true,
@@ -23,9 +15,8 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "checkJs": true,
-    "baseUrl": ".",
-    "rootDir": ".",
-    "outDir": "tmp/tsc-output"
+    "outDir": "tmp/tsc-output",
+    "sourceMap": true
   },
   "include": [
     "src/main.ts"

@@ -17,7 +17,7 @@ export interface DayBgRowProps {
   renderIntroHtml?: () => string
 }
 
-export default class YearDayBgRow {
+export default class DayBgRow {
 
   context: ComponentContext
 

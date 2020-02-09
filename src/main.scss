@@ -84,13 +84,19 @@
   .fc-row-monthname {
     height: 100%;
     width: 1.25em;
-    writing-mode: sideways-lr;
     position: absolute;
     text-align: center;
     border-right-width: 1px;
     border-right-style: solid;
     border-bottom-width: 1px;
     border-bottom-style: solid;
+
+    span {
+      display: block;
+      transform: rotate(270deg);
+      position: relative;
+      top: 50%;
+    }
   }
 
   .fc-bg, .fc-content-skeleton {

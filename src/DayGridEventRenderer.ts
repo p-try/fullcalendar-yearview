@@ -5,21 +5,21 @@ import {
   prependToElement,
   Seg
 } from '@fullcalendar/core'
-import YearGrid from './YearGrid'
-import SimpleYearGridEventRenderer from './SimpleYearGridEventRenderer'
+import DayGrid from './DayGrid'
+import SimpleDayGridEventRenderer from './SimpleDayGridEventRenderer'
 
 
 /* Event-rendering methods for the DayGrid class
 ----------------------------------------------------------------------------------------------------------------------*/
 
-export default class YearEventRenderer extends SimpleYearGridEventRenderer {
+export default class DayGridEventRenderer extends SimpleDayGridEventRenderer {
 
-  dayGrid: YearGrid
+  dayGrid: DayGrid
   rowStructs: any // an array of objects, each holding information about a row's foreground event-rendering
 
 
-  constructor(dayGrid: YearGrid) {
-    super()
+  constructor(dayGrid: DayGrid) {
+    super(dayGrid.context)
 
     this.dayGrid = dayGrid
   }
@@ -81,9 +81,8 @@ export default class YearEventRenderer extends SimpleYearGridEventRenderer {
   // the segments. Returns object with a bunch of internal data about how the render was calculated.
   // NOTE: modifies rowSegs
   renderSegRow(row, rowSegs) {
-    let { isRtl } = this.context
     let { dayGrid } = this
-    let { colCnt } = dayGrid
+    let { colCnt, isRtl } = dayGrid
     let segLevels = this.buildSegLevels(rowSegs) // group into sub-arrays of levels
     let levelCnt = Math.max(1, segLevels.length) // ensure at least one level
     let tbody = document.createElement('tbody')
@@ -156,7 +155,7 @@ export default class YearEventRenderer extends SimpleYearGridEventRenderer {
 
       let introHtml = dayGrid.renderProps.renderIntroHtml()
       if (introHtml) {
-        if (isRtl) {
+        if (dayGrid.isRtl) {
           appendToElement(tr, introHtml)
         } else {
           prependToElement(tr, introHtml)
@@ -180,8 +179,7 @@ export default class YearEventRenderer extends SimpleYearGridEventRenderer {
   // Stacks a flat array of segments, which are all assumed to be in the same row, into subarrays of vertical levels.
   // NOTE: modifies segs
   buildSegLevels(segs: Seg[]) {
-    let { isRtl } = this.context
-    let { colCnt } = this.dayGrid
+    let { isRtl, colCnt } = this.dayGrid
     let levels = []
     let i
     let seg

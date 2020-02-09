@@ -1,33 +1,55 @@
 import {
   DayHeader,
   ComponentContext,
+  ViewSpec,
   DateProfileGenerator,
   DateProfile,
   ViewProps,
   memoize,
   DaySeries
 } from '@fullcalendar/core'
-import YearTable from './YearTable'
-import AbstractYearView from './AbstractYearView'
-import SimpleYearGrid from './SimpleYearGrid'
+import AbstractDayGridView from './AbstractDayGridView'
+import SimpleDayGrid from './SimpleDayGrid'
+import DayTable from "./DayTable";
 
-
-export default class YearGridView extends AbstractYearView {
+export default class DayGridView extends AbstractDayGridView {
 
   header: DayHeader
-  simpleDayGrid: SimpleYearGrid
-  dayTable: YearTable
+  simpleDayGrid: SimpleDayGrid
+  dayTable: DayTable
 
   private buildDayTable = memoize(buildDayTable)
 
+  constructor(_context: ComponentContext, viewSpec: ViewSpec, dateProfileGenerator: DateProfileGenerator, parentEl: HTMLElement) {
+    super(_context, viewSpec, dateProfileGenerator, parentEl)
 
-  render(props: ViewProps, context: ComponentContext) {
-    super.render(props, context) // will call _renderSkeleton/_unrenderSkeleton
+    if (this.opt('columnHeader')) {
+      this.header = new DayHeader(
+        this.context,
+        this.el.querySelector('.fc-head-container')
+      )
+    }
+
+    this.simpleDayGrid = new SimpleDayGrid(this.context, this.dayGrid)
+  }
+
+  destroy() {
+    super.destroy()
+
+    if (this.header) {
+      this.header.destroy()
+    }
+
+    this.simpleDayGrid.destroy()
+  }
+
+  render(props: ViewProps) {
+    super.render(props)
 
     let { dateProfile } = this.props
 
     let dayTable = this.dayTable =
-      this.buildDayTable(dateProfile, props.dateProfileGenerator)
+      this.buildDayTable(dateProfile, this.dateProfileGenerator)
 
     if (this.header) {
       this.header.receiveProps({
@@ -35,7 +57,7 @@ export default class YearGridView extends AbstractYearView {
         dates: dayTable.headerDates,
         datesRepDistinctDays: dayTable.rowCnt === 1,
         renderIntroHtml: this.renderHeadIntroHtml
-      }, context)
+      })
     }
 
     this.simpleDayGrid.receiveProps({
@@ -49,32 +71,8 @@ export default class YearGridView extends AbstractYearView {
       eventDrag: props.eventDrag,
       eventResize: props.eventResize,
       isRigid: this.hasRigidRows(),
-      nextDayThreshold: this.context.nextDayThreshold
-    }, context)
-  }
-
-
-  _renderSkeleton(context: ComponentContext) {
-    super._renderSkeleton(context)
-
-    if (context.options.columnHeader) {
-      this.header = new DayHeader(
-        this.el.querySelector('.fc-head-container')
-      )
-    }
-
-    this.simpleDayGrid = new SimpleYearGrid(this.dayGrid)
-  }
-
-
-  _unrenderSkeleton() {
-    super._unrenderSkeleton()
-
-    if (this.header) {
-      this.header.destroy()
-    }
-
-    this.simpleDayGrid.destroy()
+      nextDayThreshold: this.nextDayThreshold
+    })
   }
 
 }
@@ -82,7 +80,7 @@ export default class YearGridView extends AbstractYearView {
 export function buildDayTable(dateProfile: DateProfile, dateProfileGenerator: DateProfileGenerator) {
   let daySeries = new DaySeries(dateProfile.renderRange, dateProfileGenerator)
 
-  return new YearTable(
+  return new DayTable(
     daySeries,
     /year|month|week/.test(dateProfile.currentRangeUnit)
   )

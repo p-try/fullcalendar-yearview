@@ -9,7 +9,7 @@ import {
   EventInstanceHash,
   memoizeRendering, MemoizedRendering
 } from '@fullcalendar/core'
-import SimpleYearGridEventRenderer from './SimpleYearGridEventRenderer'
+import SimpleDayGridEventRenderer from './SimpleDayGridEventRenderer'
 
 export interface DayTileProps {
   date: DateMarker
@@ -19,19 +19,18 @@ export interface DayTileProps {
   eventResizeInstances: EventInstanceHash
 }
 
-export default class YearTile extends DateComponent<DayTileProps> {
+export default class DayTile extends DateComponent<DayTileProps> {
 
   segContainerEl: HTMLElement
 
   private renderFrame: MemoizedRendering<[DateMarker]>
-  private renderFgEvents: MemoizedRendering<[ComponentContext, Seg[]]>
+  private renderFgEvents: MemoizedRendering<[Seg[]]>
   private renderEventSelection: MemoizedRendering<[string]>
   private renderEventDrag: MemoizedRendering<[EventInstanceHash]>
   private renderEventResize: MemoizedRendering<[EventInstanceHash]>
 
-
-  constructor(el: HTMLElement) {
-    super(el)
+  constructor(context: ComponentContext, el: HTMLElement) {
+    super(context, el)
 
     let eventRenderer = this.eventRenderer = new DayTileEventRenderer(this)
 
@@ -62,41 +61,35 @@ export default class YearTile extends DateComponent<DayTileProps> {
       eventRenderer.showByHash.bind(eventRenderer),
       [ renderFrame ]
     )
-  }
 
-
-  firstContext(context: ComponentContext) {
     context.calendar.registerInteractiveComponent(this, {
       el: this.el,
       useEventCenter: false
     })
   }
 
-
-  render(props: DayTileProps, context: ComponentContext) {
+  render(props: DayTileProps) {
     this.renderFrame(props.date)
-    this.renderFgEvents(context, props.fgSegs)
+    this.renderFgEvents(props.fgSegs)
     this.renderEventSelection(props.eventSelection)
     this.renderEventDrag(props.eventDragInstances)
     this.renderEventResize(props.eventResizeInstances)
   }
-
 
   destroy() {
     super.destroy()
 
     this.renderFrame.unrender() // should unrender everything else
 
-    this.context.calendar.unregisterInteractiveComponent(this)
+    this.calendar.unregisterInteractiveComponent(this)
   }
 
-
   _renderFrame(date: DateMarker) {
-    let { theme, dateEnv, options } = this.context
+    let { theme, dateEnv } = this
 
     let title = dateEnv.format(
       date,
-      createFormatter(options.dayPopoverFormat) // TODO: cache
+      createFormatter(this.opt('dayPopoverFormat')) // TODO: cache
     )
 
     this.el.innerHTML =
@@ -112,7 +105,6 @@ export default class YearTile extends DateComponent<DayTileProps> {
 
     this.segContainerEl = this.el.querySelector('.fc-event-container')
   }
-
 
   queryHit(positionLeft: number, positionTop: number, elWidth: number, elHeight: number): Hit | null {
     let date = (this.props as any).date // HACK
@@ -139,12 +131,12 @@ export default class YearTile extends DateComponent<DayTileProps> {
 }
 
 
-export class DayTileEventRenderer extends SimpleYearGridEventRenderer {
+export class DayTileEventRenderer extends SimpleDayGridEventRenderer {
 
-  dayTile: YearTile
+  dayTile: DayTile
 
   constructor(dayTile) {
-    super()
+    super(dayTile.context)
 
     this.dayTile = dayTile
   }

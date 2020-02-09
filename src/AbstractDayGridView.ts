@@ -10,14 +10,13 @@ import {
   ScrollComponent,
   View,
   buildGotoAnchorHtml,
-  Duration,
   ComponentContext,
-  ViewProps,
-  memoize,
-  memoizeRendering
+  ViewSpec,
+  DateProfileGenerator,
+  Duration
 } from '@fullcalendar/core'
-import YearGridDateProfileGenerator from './YearGridDateProfileGenerator'
-import YearGrid from './YearGrid'
+import DayGridDateProfileGenerator from './DayGridDateProfileGenerator'
+import DayGrid from './DayGrid'
 
 const WEEK_NUM_FORMAT = createFormatter({ week: 'numeric' })
 
@@ -27,51 +26,18 @@ const WEEK_NUM_FORMAT = createFormatter({ week: 'numeric' })
 // It is a manager for a DayGrid subcomponent, which does most of the heavy lifting.
 // It is responsible for managing width/height.
 
-export default abstract class AbstractYearView extends View {
+export default abstract class DayGridView extends View {
 
   scroller: ScrollComponent
-  dayGrid: YearGrid // the main subcomponent that does most of the heavy lifting
+  dayGrid: DayGrid // the main subcomponent that does most of the heavy lifting
 
   colWeekNumbersVisible: boolean
-  cellWeekNumbersVisible: boolean
   weekNumberWidth: number
 
-  private processOptions = memoize(this._processOptions)
-  private renderSkeleton = memoizeRendering(this._renderSkeleton, this._unrenderSkeleton)
 
+  constructor(context: ComponentContext, viewSpec: ViewSpec, dateProfileGenerator: DateProfileGenerator, parentEl: HTMLElement) {
+    super(context, viewSpec, dateProfileGenerator, parentEl)
 
-  _processOptions(options) {
-    if (options.weekNumbers) {
-      if (options.weekNumbersWithinDays) {
-        this.cellWeekNumbersVisible = true
-        this.colWeekNumbersVisible = false
-      } else {
-        this.cellWeekNumbersVisible = false
-        this.colWeekNumbersVisible = true
-      }
-    } else {
-      this.colWeekNumbersVisible = false
-      this.cellWeekNumbersVisible = false
-    }
-  }
-
-
-  render(props: ViewProps, context: ComponentContext) {
-    super.render(props, context)
-
-    this.processOptions(context.options)
-    this.renderSkeleton(context)
-  }
-
-
-  destroy() {
-    super.destroy()
-
-    this.renderSkeleton.unrender()
-  }
-
-
-  _renderSkeleton(context: ComponentContext) {
     this.el.classList.add('fc-dayGrid-view')
     this.el.innerHTML = this.renderSkeletonHtml()
 
@@ -87,35 +53,50 @@ export default abstract class AbstractYearView extends View {
     let dayGridEl = createElement('div', { className: 'fc-day-grid' })
     dayGridContainerEl.appendChild(dayGridEl)
 
-    this.dayGrid = new YearGrid(
+    let cellWeekNumbersVisible
+
+    if (this.opt('weekNumbers')) {
+      if (this.opt('weekNumbersWithinDays')) {
+        cellWeekNumbersVisible = true
+        this.colWeekNumbersVisible = false
+      } else {
+        cellWeekNumbersVisible = false
+        this.colWeekNumbersVisible = true
+      }
+    } else {
+      this.colWeekNumbersVisible = false
+      cellWeekNumbersVisible = false
+    }
+
+    this.dayGrid = new DayGrid(
+      this.context,
       dayGridEl,
       {
         renderNumberIntroHtml: this.renderDayGridNumberIntroHtml,
         renderBgIntroHtml: this.renderDayGridBgIntroHtml,
         renderIntroHtml: this.renderDayGridIntroHtml,
         colWeekNumbersVisible: this.colWeekNumbersVisible,
-        cellWeekNumbersVisible: this.cellWeekNumbersVisible
+        cellWeekNumbersVisible
       }
     )
   }
 
 
-  _unrenderSkeleton() {
-    this.el.classList.remove('fc-dayGrid-view')
+  destroy() {
+    super.destroy()
 
     this.dayGrid.destroy()
     this.scroller.destroy()
   }
 
-
   // Builds the HTML skeleton for the view.
   // The day-grid component will render inside of a container defined by this HTML.
   renderSkeletonHtml() {
-    let { theme, options } = this.context
+    let { theme } = this
 
     return '' +
       '<table class="' + theme.getClass('tableGrid') + '">' +
-        (options.columnHeader ?
+        (this.opt('columnHeader') ?
           '<thead class="fc-head">' +
             '<tr>' +
               '<td class="fc-head-container ' + theme.getClass('widgetHeader') + '">&nbsp;</td>' +
@@ -143,7 +124,7 @@ export default abstract class AbstractYearView extends View {
 
   // Determines whether each row should have a constant height
   hasRigidRows() {
-    let eventLimit = this.context.options.eventLimit
+    let eventLimit = this.opt('eventLimit')
 
     return eventLimit && typeof eventLimit !== 'number'
   }
@@ -163,7 +144,7 @@ export default abstract class AbstractYearView extends View {
   // Refreshes the horizontal dimensions of the view
   updateBaseSize(isResize: boolean, viewHeight: number, isAuto: boolean) {
     let { dayGrid } = this
-    let eventLimit = this.context.options.eventLimit
+    let eventLimit = this.opt('eventLimit')
     let headRowEl = (this as any).header ? (this as any).header.el : null // HACK
     let scrollerHeight
     let scrollbarWidths
@@ -240,7 +221,7 @@ export default abstract class AbstractYearView extends View {
   // Sets the height of just the DayGrid component in this view
   setGridHeight(height, isAuto) {
 
-    if (this.context.options.monthMode) {
+    if (this.opt('monthMode')) {
 
       // if auto, make the height of each row the height that it would be if there were 6 weeks
       if (isAuto) {
@@ -287,13 +268,13 @@ export default abstract class AbstractYearView extends View {
 
   // Generates the HTML that will go before the day-of week header cells
   renderHeadIntroHtml = () => {
-    let { theme, options } = this.context
+    let { theme } = this
 
     if (this.colWeekNumbersVisible) {
       return '' +
         '<th class="fc-week-number ' + theme.getClass('widgetHeader') + '" ' + this.weekNumberStyleAttr() + '>' +
           '<span>' + // needed for matchCellWidths
-            htmlEscape(options.weekLabel) +
+            htmlEscape(this.opt('weekLabel')) +
           '</span>' +
         '</th>'
     }
@@ -307,16 +288,15 @@ export default abstract class AbstractYearView extends View {
 
 
   // Generates the HTML that will go before content-skeleton cells that display the day/week numbers
-  renderDayGridNumberIntroHtml = (row: number, dayGrid: YearGrid) => {
-    let { options, dateEnv } = this.context
+  renderDayGridNumberIntroHtml = (row: number, dayGrid: DayGrid) => {
+    let { dateEnv } = this
     let weekStart = dayGrid.props.cells[row][0].date
 
     if (this.colWeekNumbersVisible) {
       return '' +
         '<td class="fc-week-number" ' + this.weekNumberStyleAttr() + '>' +
           buildGotoAnchorHtml( // aside from link, important for matchCellWidths
-            options,
-            dateEnv,
+            this,
             { date: weekStart, type: 'week', forceOff: dayGrid.colCnt === 1 },
             dateEnv.format(weekStart, WEEK_NUM_FORMAT) // inner HTML
           ) +
@@ -329,7 +309,7 @@ export default abstract class AbstractYearView extends View {
 
   // Generates the HTML that goes before the day bg cells for each day-row
   renderDayGridBgIntroHtml = () => {
-    let { theme } = this.context
+    let { theme } = this
 
     if (this.colWeekNumbersVisible) {
       return '<td class="fc-week-number ' + theme.getClass('widgetContent') + '" ' + this.weekNumberStyleAttr() + '></td>'
@@ -352,4 +332,4 @@ export default abstract class AbstractYearView extends View {
 
 }
 
-AbstractYearView.prototype.dateProfileGeneratorClass = YearGridDateProfileGenerator
+DayGridView.prototype.dateProfileGeneratorClass = DayGridDateProfileGenerator

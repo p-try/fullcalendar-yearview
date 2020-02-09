@@ -1,21 +1,17 @@
-import { createPlugin } from '@fullcalendar/core'
-import YearGridView from './YearGridView'
+import './main.scss'
 
-export { default as SimpleDayGrid, DayGridSlicer } from './SimpleYearGrid'
-export { default as DayGrid, DayGridSeg } from './YearGrid'
-export { default as AbstractDayGridView } from './AbstractYearView'
-export { default as DayGridView, buildDayTable as buildBasicDayTable } from './YearGridView'
-export { default as DayBgRow } from './YearDayBgRow'
+import {createPlugin} from '@fullcalendar/core'
+import DayGridView from "./DayGridView";
 
 export default createPlugin({
-  defaultView: 'year',
-  views: {
+    defaultView: 'year',
+    views: {
 
-    yearGrid: YearGridView,
+        yearGrid: DayGridView,
 
-    year: {
-      type: 'yearGrid',
-      duration: { years: 1 }
+        year: {
+            type: 'yearGrid',
+            duration: {years: 1}
+        }
     }
-  }
 })

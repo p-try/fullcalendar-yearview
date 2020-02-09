@@ -1,10 +1,10 @@
 import {
   htmlToElement, Seg
 } from '@fullcalendar/core'
-import YearEventRenderer from './YearEventRenderer'
+import DayGridEventRenderer from './DayGridEventRenderer'
 
 
-export default class YearGridMirrorRenderer extends YearEventRenderer {
+export default class DayGridMirrorRenderer extends DayGridEventRenderer {
 
   attachSegs(segs: Seg[], mirrorInfo) {
     let { sourceSeg } = mirrorInfo
