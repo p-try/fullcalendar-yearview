@@ -28,6 +28,9 @@ module.exports = {
             filename: "[name].css",
             chunkFilename: "[id].css"
         }),
+
+        // FullCalendar uses '@fullcalendar/core' as a module name in the ES6 module system but
+        // 'FullCalendar' in the compiled ES5 file
         new ReplaceInFileWebpackPlugin([{
             dir: 'dist',
             files: ['main.js'],
