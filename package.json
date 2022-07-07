@@ -7,7 +7,7 @@
   "docs": "TODO",
   "browserGlobal": "FullCalendarYearView",
   "dependencies": {
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "@fullcalendar/core": "4.3.1"
   },
   "devDependencies": {
